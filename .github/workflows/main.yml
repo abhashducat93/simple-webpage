@@ -1,21 +1,40 @@
-name: Deploy to EC2
+name: Deploy Webpage to EC2
 on:
   push:
     branches: [ main ]
 
 jobs:
   deploy:
-    runs-on: self-hosted  # Uses your EC2 runner
+    # This job will only run on runners with the 'self-hosted' label
+    runs-on: self-hosted
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
-      - name: Install Nginx (if not present)
+
+      - name: Install Nginx if not present
         run: |
-          sudo yum install -y nginx || true
+          sudo apt-get update
+          sudo apt-get install -y nginx
           sudo systemctl start nginx
-      
-      - name: Copy files to Nginx
+          sudo systemctl enable nginx
+
+      - name: Deploy files to Nginx
         run: |
-          sudo rm -rf /usr/share/nginx/html/*
-          sudo cp -r . /usr/share/nginx/html/
+          # Remove existing files
+          sudo rm -rf /var/www/html/*
+          
+          # Copy new files (using sudo to maintain permissions)
+          sudo cp -r . /var/www/html/
+          
+          # Set proper permissions
+          sudo chown -R www-data:www-data /var/www/html
+          sudo chmod -R 755 /var/www/html
+
+      - name: Restart Nginx
+        run: sudo systemctl restart nginx
+
+      - name: Verify deployment
+        run: |
+          echo "Deployment complete!"
+          echo "Your site should now be available at: http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)"
