@@ -5,7 +5,7 @@ on:
 
 jobs:
   deploy:
-    # This job will only run on runners with the 'self-hosted' label
+    # Thiss job will only run on runners with the 'self-hosted' label
     runs-on: self-hosted
     
     steps:
